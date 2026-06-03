@@ -286,6 +286,10 @@ The dataset is not yet suitable for:
 ```bash
 python run_pipeline.py
 ```
+### Run Tests
+
+```bash
+python -m pytest tests/ -v
 
 ---
 
