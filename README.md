@@ -265,6 +265,8 @@ Pipeline fully implemented with:
 - SQL analytics layer with DuckDB.
 - Source-level analytical summaries.
 - SQL-based data quality checks.
+- GitHub Actions CI workflow.
+
 
 ---
 
@@ -327,6 +329,8 @@ The dataset is not yet suitable for:
 - Git / GitHub
 - DuckDB
 - SQL
+- GitHub Actions
+
 
 ---
 
@@ -351,6 +355,22 @@ python -m scripts.analytics.create_duckdb_database
 ```
 
 ---
+## CI/CD
+
+This project uses GitHub Actions to run the automated test suite on every push and pull request to the `main` branch.
+
+The workflow:
+
+- Checks out the repository.
+- Sets up Python 3.11.
+- Installs project dependencies.
+- Runs the full `pytest` test suite.
+
+Workflow file:
+
+```text
+.github/workflows/tests.yml
+
 
 ## Example Pipeline Flow
 
