@@ -64,82 +64,94 @@ All data is retrieved from RECOPE REST APIs and stored in raw JSON format.
 
 ## Pipeline Workflow
 
-The pipeline follows a modular data engineering workflow:
+The pipeline follows a modular data engineering workflow.
 
 ### 1. Data Ingestion
 
-- Fetch data from RECOPE APIs
-- Store raw JSON snapshots in `data/raw/` with a timestamp suffix (e.g. `consumer_prices_20260507_101824.json`)
-- Each pipeline run appends new files — old files are not deleted automatically
-- The pipeline always processes the most recently created file per source
-
+- Fetch data from RECOPE APIs.
+- Store raw JSON snapshots in `data/raw/` with a timestamp suffix.
+- Each pipeline run appends new files; old files are not deleted automatically.
+- The pipeline always processes the most recently created file per source.
 
 ### 2. Data Cleaning
 
-- Normalize field names
-- Parse dates and numeric values
-- Remove malformed records
-- Add ingestion metadata
+- Normalize field names.
+- Parse dates and numeric values.
+- Remove malformed records.
+- Add ingestion metadata.
 
 ### 3. Data Transformation
 
-- Convert cleaned JSON into CSV format
-- Standardize schemas across datasets
+- Convert cleaned JSON into CSV format.
+- Standardize schemas across datasets.
 
 ### 4. Data Modeling
 
-- Merge all datasets into a unified table
-- Normalize currencies
-- Standardize schema structure
-- Introduce `price_unit` to preserve unit context
+- Merge all datasets into a unified table.
+- Normalize currencies.
+- Standardize schema structure.
+- Introduce `price_unit` to preserve unit context.
 
 ### 5. Data Validation
 
-Validation layer includes:
+The validation layer includes:
 
-- Null checks
-- Duplicate detection
-- Negative price detection
-- Schema validation
-- Fail-fast behavior on critical errors
+- Null checks.
+- Duplicate detection.
+- Negative price detection.
+- Schema validation.
+- Empty dataset detection.
+- Fail-fast behavior on critical errors.
 
 ---
 
 ## Project Structure
 
 ```text
-Recope-fuel-data-pipeline/
+recope-data-pipeline/
 
-data/
-├── raw/
-└── processed/
-
-logs/
-└── pipeline.log
-
-scripts/
-├── fetch/
-│   ├── fetch_consumer_prices.py
-│   ├── fetch_international_prices.py
-│   └── fetch_plantel_prices.py
-├── transform/
-│   ├── clean_consumer_prices.py
-│   ├── clean_international_prices.py
-│   ├── clean_plantel_prices.py
-│   ├── transform_consumer_prices.py
-│   ├── transform_international_prices.py
-│   ├── transform_plantel_prices.py
-│   └── model_prices_data.py
-├── quality/
-│   └── validate_prices.py
-└── utils/
-    └── logger.py
-
-
-README.md
-requirements.txt
-.gitignore
-run_pipeline.py
+|-- data/
+|   |-- raw/
+|   |-- processed/
+|
+|-- logs/
+|   |-- pipeline.log
+|
+|-- scripts/
+|   |-- fetch/
+|   |   |-- fetch_consumer_prices.py
+|   |   |-- fetch_international_prices.py
+|   |   |-- fetch_plantel_prices.py
+|   |
+|   |-- transform/
+|   |   |-- clean_consumer_prices.py
+|   |   |-- clean_international_prices.py
+|   |   |-- clean_plantel_prices.py
+|   |   |-- transform_consumer_prices.py
+|   |   |-- transform_international_prices.py
+|   |   |-- transform_plantel_prices.py
+|   |   |-- model_prices_data.py
+|   |
+|   |-- quality/
+|   |   |-- validate_prices.py
+|   |
+|   |-- utils/
+|       |-- logger.py
+|
+|-- tests/
+|   |-- test_clean_consumer_prices.py
+|   |-- test_clean_international_prices.py
+|   |-- test_clean_plantel_prices.py
+|   |-- test_transform_consumer_prices.py
+|   |-- test_transform_international_prices.py
+|   |-- test_transform_plantel_prices.py
+|   |-- test_model_prices_data.py
+|   |-- test_validate_prices.py
+|
+|-- README.md
+|-- requirements.txt
+|-- .gitignore
+|-- run_pipeline.py
 ```
 
 ---
@@ -182,6 +194,33 @@ The pipeline also produces the following intermediate files in `data/processed/`
 
 These files are not the final output but are preserved for debugging and auditability.
 
+---
+
+## Testing
+
+This project includes an automated test suite built with `pytest` to validate the main stages of the data pipeline.
+
+The tests cover:
+
+- Raw data cleaning for consumer, international, and plantel fuel prices.
+- Handling of malformed records during the cleaning stage.
+- JSON-to-CSV transformation for each data source.
+- Empty dataset handling during transformation.
+- Unified price modeling across multiple sources.
+- Currency normalization from USD to CRC.
+- Data quality validation rules, including missing values, negative prices, missing columns, duplicate rows, and empty datasets.
+
+To run the full test suite:
+
+```bash
+python -m pytest -v
+```
+
+Current test status:
+
+```text
+31 passed
+```
 
 ---
 
@@ -189,11 +228,11 @@ These files are not the final output but are preserved for debugging and auditab
 
 The pipeline includes centralized logging with:
 
-- Step-level execution tracking
-- Persistent log storage
-- Error logging
-- Fail-fast exception handling
-- Pipeline observability
+- Step-level execution tracking.
+- Persistent log storage.
+- Error logging.
+- Fail-fast exception handling.
+- Pipeline observability.
 
 Logs are stored in:
 
@@ -207,15 +246,16 @@ logs/pipeline.log
 
 Pipeline fully implemented with:
 
-- End-to-end orchestration
-- Real-world API integration
-- Modular ETL architecture
-- Centralized logging
-- Data quality validation
-- Unified data modeling
-- Currency normalization
-- Structured CSV outputs
-- Fail-fast pipeline behavior
+- End-to-end orchestration.
+- Real-world API integration.
+- Modular ETL architecture.
+- Centralized logging.
+- Data quality validation.
+- Unified data modeling.
+- Currency normalization.
+- Structured CSV outputs.
+- Automated pytest test suite.
+- Fail-fast pipeline behavior.
 
 ---
 
@@ -225,45 +265,44 @@ The modeled dataset preserves original measurement units and currencies to avoid
 
 Current design principles:
 
-- No physical unit conversion is applied (e.g., KG → L)
-- International prices preserve original market units
-- Currency normalization (USD → CRC) is applied separately
-- Data fidelity is prioritized over forced comparability
+- No physical unit conversion is applied, such as KG to L.
+- International prices preserve original market units.
+- Currency normalization from USD to CRC is applied separately.
+- Data fidelity is prioritized over forced comparability.
 
 ### Currency Conversion Note
 
-USD to CRC conversion uses a fixed exchange rate (`USD_TO_CRC = 540`).
-This rate is hardcoded and does not reflect real-time market rates.
-Price comparisons involving international prices should account for this limitation.
+USD to CRC conversion uses a fixed exchange rate: `USD_TO_CRC = 540`.
 
+This rate is hardcoded and does not reflect real-time market rates. Price comparisons involving international prices should account for this limitation.
 
 ### Implications
 
 The dataset is currently suitable for:
 
-- Data storage
-- Exploration
-- Auditing
-- Historical tracking
-- Future analytical modeling
+- Data storage.
+- Exploration.
+- Auditing.
+- Historical tracking.
+- Future analytical modeling.
 
 The dataset is not yet suitable for:
 
-- Direct cross-source price comparison
-- Unit-equivalent analytics
+- Direct cross-source price comparison.
+- Unit-equivalent analytics.
 
 ---
 
 ## Pending Improvements
 
-- Expand validation rules
-- Add automated unit and integration tests
-- Implement orchestration tools (Airflow / Prefect)
-- Add workflow scheduling
-- Containerize pipeline with Docker
-- Add CI/CD workflows
-- Introduce analytics-ready marts
-- Persist modeled data into a database
+- Add CI/CD workflow to run tests automatically.
+- Implement orchestration tools such as Airflow or Prefect.
+- Add workflow scheduling.
+- Containerize pipeline with Docker.
+- Introduce SQL or DuckDB analytics layer.
+- Add analytics-ready marts.
+- Persist modeled data into a database.
+- Improve currency conversion using dynamic exchange rates.
 
 ---
 
@@ -274,6 +313,7 @@ The dataset is not yet suitable for:
 - Requests
 - JSON
 - CSV
+- Pytest
 - Logging
 - Git / GitHub
 
@@ -286,10 +326,12 @@ The dataset is not yet suitable for:
 ```bash
 python run_pipeline.py
 ```
+
 ### Run Tests
 
 ```bash
-python -m pytest tests/ -v
+python -m pytest -v
+```
 
 ---
 
