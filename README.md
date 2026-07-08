@@ -103,6 +103,12 @@ The validation layer includes:
 - Empty dataset detection.
 - Fail-fast behavior on critical errors.
 
+### 6. SQL Analytics Layer
+
+- Load the modeled dataset into a local DuckDB database.
+- Create a SQL table from `prices_modeled.csv`.
+- Run analytical SQL queries over the unified dataset.
+- Export summary outputs for reporting and data quality review.
 ---
 
 ## Project Structure
@@ -256,6 +262,9 @@ Pipeline fully implemented with:
 - Structured CSV outputs.
 - Automated pytest test suite.
 - Fail-fast pipeline behavior.
+- SQL analytics layer with DuckDB.
+- Source-level analytical summaries.
+- SQL-based data quality checks.
 
 ---
 
@@ -299,10 +308,10 @@ The dataset is not yet suitable for:
 - Implement orchestration tools such as Airflow or Prefect.
 - Add workflow scheduling.
 - Containerize pipeline with Docker.
-- Introduce SQL or DuckDB analytics layer.
 - Add analytics-ready marts.
 - Persist modeled data into a database.
 - Improve currency conversion using dynamic exchange rates.
+
 
 ---
 
@@ -316,6 +325,8 @@ The dataset is not yet suitable for:
 - Pytest
 - Logging
 - Git / GitHub
+- DuckDB
+- SQL
 
 ---
 
@@ -331,6 +342,12 @@ python run_pipeline.py
 
 ```bash
 python -m pytest -v
+```
+
+### Run DuckDB Analytics Layer
+
+```bash
+python -m scripts.analytics.create_duckdb_database
 ```
 
 ---
