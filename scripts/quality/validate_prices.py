@@ -12,6 +12,10 @@ def validate_prices_df(df: pd.DataFrame) -> None:
 
     logger.info("Running data quality checks")
 
+    if df.empty:
+        raise ValueError("DataFrame is empty - no data to validate")
+    
+
     # -----------------------------
     # 1. Columnas requeridas
     # -----------------------------

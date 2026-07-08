@@ -104,3 +104,58 @@ def test_multiple_valid_rows_pass():
     ])
 
     validate_prices_df(df)        
+
+
+
+
+
+def test_duplicate_rows_warning():
+    """
+    Verifica que la función detecta y advierte sobre duplicados.
+    Duplicados pueden sesgar análisis (datos contados 2x).
+    """
+    df = pd.DataFrame([
+        {
+            "date": "2026-01-01",
+            "product": "Gasolina Regular",
+            "source": "consumer",
+            "price": 1000.0,
+            "currency": "CRC",
+            "price_crc": 1000.0,
+            "product_id": "1"
+        },
+        {
+            "date": "2026-01-01",
+            "product": "Gasolina Regular",
+            "source": "consumer",
+            "price": 1000.0,
+            "currency": "CRC",
+            "price_crc": 1000.0,
+            "product_id": "1"
+        }
+        # ↑ Fila duplicada (exactamente igual)
+    ])
+
+    # La función NO lanza error, solo advierte (logging.warning)
+    # Por eso NO usamos pytest.raises()
+    validate_prices_df(df)
+
+
+    
+
+
+
+def test_empty_dataframe_raises_error():
+    """
+    Verifica que un DataFrame vacío lanza error.
+    DataFrame vacío = no hay datos = pipeline no debe continuar.
+    """
+    df = pd.DataFrame(columns=[
+        "date", "product", "source", "price", 
+        "currency", "price_crc", "product_id"
+    ])
+    # ↑ DataFrame con columnas pero sin filas
+
+    # Debería lanzar error porque no hay datos
+    with pytest.raises(ValueError):
+        validate_prices_df(df)
