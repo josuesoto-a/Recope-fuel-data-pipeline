@@ -2,9 +2,9 @@
 
 ## Overview
 
-End-to-end data engineering pipeline that extracts, processes, validates, and models fuel price data from RECOPE (Refinadora Costarricense de Petróleo).
+End-to-end data engineering pipeline that extracts, processes, validates, models, and analyzes fuel price data from RECOPE (Refinadora Costarricense de Petróleo).
 
-The pipeline integrates multiple real-world data sources and produces a unified dataset ready for analysis and future analytics workloads.
+The pipeline integrates multiple real-world data sources and produces a unified dataset ready for analysis, SQL querying, and future analytics workloads.
 
 ---
 
@@ -30,7 +30,13 @@ D --> E[Data Modeling Layer]
 E --> F[Validation Layer]
 
 F --> G[Unified Dataset]
+
 G --> H[prices_modeled.csv]
+G --> I[prices_modeled.parquet]
+G --> J[DuckDB Analytics Layer]
+
+J --> K[price_summary_by_source.csv]
+J --> L[source_quality_checks.csv]
 ```
 
 ---
@@ -103,12 +109,14 @@ The validation layer includes:
 - Empty dataset detection.
 - Fail-fast behavior on critical errors.
 
-### 6. SQL Analytics Layer
+### 6. Analytics Outputs
 
+- Export the modeled dataset to Parquet format.
 - Load the modeled dataset into a local DuckDB database.
 - Create a SQL table from `prices_modeled.csv`.
 - Run analytical SQL queries over the unified dataset.
 - Export summary outputs for reporting and data quality review.
+
 ---
 
 ## Project Structure
@@ -141,8 +149,17 @@ recope-data-pipeline/
 |   |-- quality/
 |   |   |-- validate_prices.py
 |   |
+|   |-- analytics/
+|   |   |-- create_duckdb_database.py
+|   |   |-- export_modeled_to_parquet.py
+|   |
 |   |-- utils/
 |       |-- logger.py
+|
+|-- sql/
+|   |-- create_prices_table.sql
+|   |-- price_summary_by_source.sql
+|   |-- source_quality_checks.sql
 |
 |-- tests/
 |   |-- test_clean_consumer_prices.py
@@ -153,6 +170,12 @@ recope-data-pipeline/
 |   |-- test_transform_plantel_prices.py
 |   |-- test_model_prices_data.py
 |   |-- test_validate_prices.py
+|   |-- test_create_duckdb_database.py
+|   |-- test_export_modeled_to_parquet.py
+|
+|-- .github/
+|   |-- workflows/
+|       |-- tests.yml
 |
 |-- README.md
 |-- requirements.txt
@@ -162,13 +185,17 @@ recope-data-pipeline/
 
 ---
 
-## Final Output
+## Final Outputs
 
-### File
+The pipeline produces the following final outputs in `data/processed/`:
 
-```text
-data/processed/prices_modeled.csv
-```
+| File | Description |
+|---|---|
+| `prices_modeled.csv` | Unified modeled dataset in CSV format |
+| `prices_modeled.parquet` | Unified modeled dataset in Parquet format |
+| `recope_prices.duckdb` | Local DuckDB database containing the modeled `prices` table |
+| `price_summary_by_source.csv` | SQL-generated source-level price summary |
+| `source_quality_checks.csv` | SQL-generated data quality summary by source |
 
 ### Unified Schema
 
@@ -198,7 +225,7 @@ The pipeline also produces the following intermediate files in `data/processed/`
 | `international_prices.csv` | International prices in CSV format, output of the transformation step |
 | `plantel_prices.csv` | Plantel prices in CSV format, output of the transformation step |
 
-These files are not the final output but are preserved for debugging and auditability.
+These files are preserved for debugging and auditability.
 
 ---
 
@@ -215,6 +242,8 @@ The tests cover:
 - Unified price modeling across multiple sources.
 - Currency normalization from USD to CRC.
 - Data quality validation rules, including missing values, negative prices, missing columns, duplicate rows, and empty datasets.
+- DuckDB analytics output generation.
+- Parquet export generation.
 
 To run the full test suite:
 
@@ -260,13 +289,13 @@ Pipeline fully implemented with:
 - Unified data modeling.
 - Currency normalization.
 - Structured CSV outputs.
-- Automated pytest test suite.
-- Fail-fast pipeline behavior.
-- SQL analytics layer with DuckDB.
+- Parquet output generation.
+- DuckDB SQL analytics layer.
 - Source-level analytical summaries.
 - SQL-based data quality checks.
+- Automated pytest test suite.
 - GitHub Actions CI workflow.
-
+- Fail-fast pipeline behavior.
 
 ---
 
@@ -287,6 +316,13 @@ USD to CRC conversion uses a fixed exchange rate: `USD_TO_CRC = 540`.
 
 This rate is hardcoded and does not reflect real-time market rates. Price comparisons involving international prices should account for this limitation.
 
+### CSV and Parquet Outputs
+
+The pipeline keeps both CSV and Parquet outputs:
+
+- CSV is human-readable and easy to inspect.
+- Parquet is columnar, compressed, and more efficient for analytical workloads.
+
 ### Implications
 
 The dataset is currently suitable for:
@@ -295,6 +331,7 @@ The dataset is currently suitable for:
 - Exploration.
 - Auditing.
 - Historical tracking.
+- SQL-based analytics.
 - Future analytical modeling.
 
 The dataset is not yet suitable for:
@@ -306,14 +343,12 @@ The dataset is not yet suitable for:
 
 ## Pending Improvements
 
-- Add CI/CD workflow to run tests automatically.
+- Containerize pipeline with Docker.
 - Implement orchestration tools such as Airflow or Prefect.
 - Add workflow scheduling.
-- Containerize pipeline with Docker.
 - Add analytics-ready marts.
-- Persist modeled data into a database.
 - Improve currency conversion using dynamic exchange rates.
-
+- Add cloud storage or warehouse integration.
 
 ---
 
@@ -324,13 +359,13 @@ The dataset is not yet suitable for:
 - Requests
 - JSON
 - CSV
+- Parquet
+- DuckDB
+- SQL
 - Pytest
 - Logging
 - Git / GitHub
-- DuckDB
-- SQL
 - GitHub Actions
-
 
 ---
 
@@ -342,19 +377,32 @@ The dataset is not yet suitable for:
 python run_pipeline.py
 ```
 
+The full pipeline runs:
+
+```text
+Fetch → Clean → Transform → Model → Validate → Parquet Export → DuckDB Analytics
+```
+
 ### Run Tests
 
 ```bash
 python -m pytest -v
 ```
 
-### Run DuckDB Analytics Layer
+### Run DuckDB Analytics Layer Only
 
 ```bash
 python -m scripts.analytics.create_duckdb_database
 ```
 
+### Run Parquet Export Only
+
+```bash
+python -m scripts.analytics.export_modeled_to_parquet
+```
+
 ---
+
 ## CI/CD
 
 This project uses GitHub Actions to run the automated test suite on every push and pull request to the `main` branch.
@@ -370,7 +418,9 @@ Workflow file:
 
 ```text
 .github/workflows/tests.yml
+```
 
+---
 
 ## Example Pipeline Flow
 
@@ -387,7 +437,13 @@ Model Unified Dataset
     ↓
 Validate Data Quality
     ↓
-Generate prices_modeled.csv
+Export Parquet Dataset
+    ↓
+Create DuckDB Database
+    ↓
+Run SQL Analytics
+    ↓
+Generate analytical outputs
 ```
 
 ---
