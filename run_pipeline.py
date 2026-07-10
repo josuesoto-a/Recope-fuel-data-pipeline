@@ -21,12 +21,17 @@ from scripts.transform.transform_plantel_prices import transform_plantel_prices
 # MODEL
 from scripts.transform.model_prices_data import model_prices_data
 
+# DUCKDB
+from scripts.analytics.create_duckdb_database import create_duckdb_database
+
+# PARQUET 
+from scripts.analytics.export_modeled_to_parquet import export_modeled_to_parquet
 
 logger = get_logger("run_pipeline")
 
 
 # -----------------------------
-# UTILIDAD: obtener último archivo
+# Utility: get the latest file.
 # -----------------------------
 def get_latest_file(directory, pattern):
     files = list(Path(directory).glob(pattern))
@@ -104,6 +109,23 @@ def run_pipeline():
         logger.info("STEP 5: VALIDATION")
 
         validate_prices_file(modeled_output)
+
+        
+        # -----------------------------
+        # 6. ANALYTICS OUTPUTS
+        # -----------------------------
+        logger.info("STEP 6: ANALYTICS OUTPUTS")
+
+        parquet_output = Path("data/processed/prices_modeled.parquet")
+
+        export_modeled_to_parquet(
+            modeled_output,
+            parquet_output
+        )
+
+        create_duckdb_database()
+
+
 
         logger.info("===== PIPELINE COMPLETED SUCCESSFULLY =====")
 
