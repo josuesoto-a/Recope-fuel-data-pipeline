@@ -1,0 +1,15 @@
+.git
+.github
+.pytest_cache
+__pycache__
+*.pyc
+
+data/raw
+data/processed
+logs
+
+.env
+venv
+.venv
+.vscode
+.claude
