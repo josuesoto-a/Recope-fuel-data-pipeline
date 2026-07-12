@@ -1,8 +1,10 @@
 # Recope Fuel Data Pipeline
 
+[![Run Tests](https://github.com/josuesoto-a/Recope-fuel-data-pipeline/actions/workflows/tests.yml/badge.svg)](https://github.com/josuesoto-a/Recope-fuel-data-pipeline/actions/workflows/tests.yml)
+
 ## Overview
 
-End-to-end data engineering pipeline that extracts, processes, validates, models, and analyzes fuel price data from RECOPE (Refinadora Costarricense de Petróleo).
+End-to-end data engineering pipeline that extracts, processes, validates, models, and analyzes fuel price data from RECOPE (Refinadora Costarricense de Petróleo), Costa Rica’s state-owned fuel importation, refining, and distribution company.
 
 The pipeline integrates multiple real-world data sources and produces a unified dataset ready for analysis, SQL querying, and future analytics workloads.
 
@@ -180,6 +182,8 @@ recope-data-pipeline/
 |-- README.md
 |-- requirements.txt
 |-- .gitignore
+|-- .dockerignore
+|-- Dockerfile
 |-- run_pipeline.py
 ```
 
@@ -295,6 +299,7 @@ Pipeline fully implemented with:
 - SQL-based data quality checks.
 - Automated pytest test suite.
 - GitHub Actions CI workflow.
+- Docker configuration for reproducible local execution.
 - Fail-fast pipeline behavior.
 
 ---
@@ -323,6 +328,12 @@ The pipeline keeps both CSV and Parquet outputs:
 - CSV is human-readable and easy to inspect.
 - Parquet is columnar, compressed, and more efficient for analytical workloads.
 
+### Dockerized Test Execution
+
+The project includes Docker configuration to make the test environment reproducible across machines.
+
+The default Docker command runs the automated test suite with `pytest`.
+
 ### Implications
 
 The dataset is currently suitable for:
@@ -343,7 +354,6 @@ The dataset is not yet suitable for:
 
 ## Pending Improvements
 
-- Containerize pipeline with Docker.
 - Implement orchestration tools such as Airflow or Prefect.
 - Add workflow scheduling.
 - Add analytics-ready marts.
@@ -366,6 +376,7 @@ The dataset is not yet suitable for:
 - Logging
 - Git / GitHub
 - GitHub Actions
+- Docker
 
 ---
 
@@ -387,6 +398,20 @@ Fetch → Clean → Transform → Model → Validate → Parquet Export → Duck
 
 ```bash
 python -m pytest -v
+```
+
+### Run Tests with Docker
+
+Build the Docker image:
+
+```bash
+docker build -t recope-data-pipeline .
+```
+
+Run the test suite inside the container:
+
+```bash
+docker run --rm recope-data-pipeline
 ```
 
 ### Run DuckDB Analytics Layer Only
@@ -418,6 +443,18 @@ Workflow file:
 
 ```text
 .github/workflows/tests.yml
+```
+
+---
+
+## Docker
+
+This project includes a `Dockerfile` and `.dockerignore` to support reproducible execution in a containerized environment.
+
+By default, the Docker container runs the automated test suite:
+
+```bash
+docker run --rm recope-data-pipeline
 ```
 
 ---
